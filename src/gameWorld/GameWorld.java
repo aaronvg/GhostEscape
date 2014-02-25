@@ -72,9 +72,6 @@ public class GameWorld {
 	public static final Vector2 gravity = new Vector2(0, -12);
 
 	public final Ghosty bob;
-	// public final List<Platform> platforms;
-	// public final List<Spring> springs;
-	// public final List<Squirrel> squirrels;
 	public final List<Coin> coins;
 	// public Castle castle;
 	public final WorldListener listener;
@@ -86,11 +83,6 @@ public class GameWorld {
 
 	public TiledMap map; // this is what the worldRenderer uses.
 	public OrthogonalTiledMapRenderer renderer;
-	private OrthographicCamera camera;
-	private Texture koalaTexture;
-
-	private Texture ghostTexture;
-	private TextureRegion ghostRegion;
 
 	private Animation stand;
 	private Animation walk;
@@ -106,9 +98,6 @@ public class GameWorld {
 
 	public GameWorld(WorldListener listener, SensorFusionListener sensor) {
 		this.bob = new Ghosty(10, 84, sensor);
-		// this.platforms = new ArrayList<Platform>();
-		// this.springs = new ArrayList<Spring>();
-		// this.squirrels = new ArrayList<Squirrel>();
 		this.coins = new ArrayList<Coin>();
 		this.listener = listener;
 		rand = new Random();
@@ -120,11 +109,6 @@ public class GameWorld {
 		this.state = WORLD_STATE_RUNNING;
 		this.sensor = sensor;
 		dampingCounter = bob.DAMPING;
-		
-		
-		
-		
-		
 	}
 
 	private void generateLevel() {
@@ -209,7 +193,6 @@ public class GameWorld {
 			bob.directionVector.x = (float) ((-Math.sin(deg)) * 1);
 			bob.directionVector.y = (float) ((Math.cos(deg)) * 1);
 		} else {
-			Log.d("velocityeeee", Float.toString(bob.velocity.x));
 			double deg = Math.toRadians(sensor.getAzimuth());
 			bob.velocity.x += (float) ((-Math.sin(deg)) * bob.SPEED);
 			bob.velocity.y += (float) ((Math.cos(deg)) * bob.SPEED);
@@ -227,7 +210,7 @@ public class GameWorld {
 				bob.getBounds().height);
 		
 		
-
+/*
 		int startX, startY, endX, endY;
 		
 		
@@ -277,7 +260,7 @@ public class GameWorld {
 			}
 		}
 		rectPool.free(bobRect);
-
+	*/
 		bob.position.add(bob.velocity);
 		bob.getBounds().x = bob.position.x;
 		bob.getBounds().y = bob.position.y;

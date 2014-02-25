@@ -20,7 +20,7 @@ public class Ghosty extends DynamicGameObject {
 	public static final float GHOST_MOVE_VELOCITY = 20;
 	public static final float GHOST_WIDTH = 0.8f;
 	public static final float GHOST_HEIGHT = 0.8f;
-	public static final float ACCELERATION = 12f;
+	public static final float ACCELERATION = 8f;
 	public static float DAMPING = .999f;
 	
 	public static final float SPEED = 8f;

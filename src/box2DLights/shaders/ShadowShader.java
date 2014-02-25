@@ -18,7 +18,7 @@ public final class ShadowShader {
                 final String fragmentShader = "#ifdef GL_ES\n" //
                         + "precision lowp float;\n" //
                         + "#define MED mediump\n"
-                        + "#else\n"
+                        + "#else\n" 
                         + "#define MED \n"
                         + "#endif\n" //
                                 + "varying MED vec2 v_texCoords;\n" //

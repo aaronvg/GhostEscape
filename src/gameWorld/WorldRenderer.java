@@ -167,6 +167,41 @@ public class WorldRenderer {
 		originY = 1 / 48f * ghostTexture.getHeight() / 2f;
 		textureWidth = 1 / 48f * 64; // texture is 64 pixels big.
 		textureHeight = 1 / 48f * 64;
+		
+		
+		
+		
+		// Physics setup ---------------------------
+		// Creates Box2D world where we will put all our collision objects in.
+		//world2 = new World(new Vector2(0, -9.8f), false);
+		world2 = new World(new Vector2(0, 0), false);
+		
+		// Create definition of a collision body (a square)
+		BodyDef circleDef = new BodyDef();
+		circleDef.type = BodyType.DynamicBody;
+		circleDef.position.set(10.5f, 84.5f);
+		
+
+		// Create shape for that definition
+		circleBody = world2.createBody(circleDef);
+		CircleShape circleShape = new CircleShape();
+		circleShape.setRadius(.55f);
+		circleBody.setFixedRotation(true);
+
+		// Unite them in one fixture object.
+		FixtureDef circleFixture = new FixtureDef();
+		circleFixture.shape = circleShape;
+		circleFixture.density = .4f;
+		circleFixture.friction = .2f;
+		circleFixture.restitution = .6f;
+		
+		circleBody.createFixture(circleFixture);
+		
+		// Load more collision objects from the tiled map into our box2D simulation/world.
+		map = new TmxMapLoader().load("data/level.tmx");
+		mapBuilder = new MapBodyBuilder();
+		mapBuilder.buildShapes(map, 70f, world2);
+				
 
 		
 		// Light setup ---------------------------
@@ -191,34 +226,6 @@ public class WorldRenderer {
 		pointLight2.setSoftnessLenght(1.5f);
 		pointLight2.setXray(true);
 		
-		// Physics setup ---------------------------
-		// Creates Box2D world where we will put all our collision objects in.
-		world2 = new World(new Vector2(0, -9.8f), false);
-		
-
-		// Create definition of a collision body (a square)
-		BodyDef circleDef = new BodyDef();
-		circleDef.type = BodyType.DynamicBody;
-		circleDef.position.set(10, 94);
-
-		// Create shape for that definition
-		circleBody = world2.createBody(circleDef);
-		CircleShape circleShape = new CircleShape();
-		circleShape.setRadius(.6f);
-
-		// Unite them in one fixture object.
-		FixtureDef circleFixture = new FixtureDef();
-		circleFixture.shape = circleShape;
-		circleFixture.density = .4f;
-		circleFixture.friction = .2f;
-		circleFixture.restitution = .6f;
-		circleBody.createFixture(circleFixture);
-		
-		// Load more collision objects from the tiled map into our box2D simulation/world.
-		map = new TmxMapLoader().load("data/level.tmx");
-		mapBuilder = new MapBodyBuilder();
-		mapBuilder.buildShapes(map, 70f, world2);
-		
 		
 		
 		
@@ -239,9 +246,11 @@ public class WorldRenderer {
 
 	public void render() {
 
-		pointLight.setPosition(world.bob.position.x, world.bob.position.y);
-		pointLight2.setPosition(world.bob.position.x, world.bob.position.y);
+		//pointLight.setPosition(world.bob.position.x, world.bob.position.y);
+		//pointLight2.setPosition(world.bob.position.x, world.bob.position.y);
 		
+		pointLight.setPosition(circleBody.getPosition().x, circleBody.getPosition().y);
+		pointLight2.setPosition(circleBody.getPosition().x, circleBody.getPosition().y);
 
 		//handler.setCombinedMatrix(cam.combined);
 		handler.setCombinedMatrix(cam.combined,cam.position.x, cam.position.y, cam.viewportWidth * cam.zoom, cam.viewportHeight * cam.zoom);
@@ -251,8 +260,12 @@ public class WorldRenderer {
 		float lerp = 0.95f;
 		Vector3 position = cam.position;
 		world.bob.directionVector.nor();
-		position.x += (world.bob.position.x + world.bob.directionVector.x * 1.8 - position.x) * lerp;
-		position.y += (world.bob.position.y + world.bob.directionVector.y * 1.8 - position.y) * lerp;
+		//position.x += (world.bob.position.x + world.bob.directionVector.x * 1.8 - position.x) * lerp;
+		//position.y += (world.bob.position.y + world.bob.directionVector.y * 1.8 - position.y) * lerp;
+		
+		position.x += (circleBody.getPosition().x + world.bob.directionVector.x * 1.8 - position.x) * lerp;
+		position.y += (circleBody.getPosition().y + world.bob.directionVector.y * 1.8 - position.y) * lerp;
+		
 		//cam.position.x = world.bob.position.x;
 		//cam.position.y = world.bob.position.y;
 		float camAngle = -getCameraCurrentXYAngle(cam); // + 180;
@@ -311,6 +324,8 @@ public class WorldRenderer {
 		handler.updateAndRender();
 		
 		// physics update
+		double deg = Math.toRadians(world.bob.sensor.getAzimuth());
+		circleBody.setLinearVelocity((float)(-Math.sin(deg)) * 7, (float)(Math.cos(deg)) * 7);
 		world2.step(1 / 60f, 6, 2);
 
 	}
@@ -351,13 +366,19 @@ public class WorldRenderer {
 			keyFrame = Assets.bobHit;
 		}
 
-		batch.draw(ghostRegion, world.bob.position.x - .2f,
-				world.bob.position.y - .2f, originX, originY, textureWidth,
-				textureHeight, 1, 1, world.sensor.getAzimuth(), false);
+		batch.draw(ghostRegion, circleBody.getPosition().x - .7f,
+							circleBody.getPosition().y - .64f, originX, originY, textureWidth,
+							textureHeight, 1, 1, world.sensor.getAzimuth(), false);
 		
-		batch.draw(ghostRegion, world.bob.position2.x - .2f,
-				world.bob.position2.y - .4f, originX, originY, textureWidth * .5f,
-				textureHeight*.5f, 1, 1, world.bob.angleBaby, false);
+		
+		
+	//	batch.draw(ghostRegion, world.bob.position.x - .2f,
+	//			world.bob.position.y - .2f, originX, originY, textureWidth,
+	//			textureHeight, 1, 1, world.sensor.getAzimuth(), false);
+		
+	//	batch.draw(ghostRegion, world.bob.position2.x - .2f,
+	//			world.bob.position2.y - .4f, originX, originY, textureWidth * .5f,
+	//			textureHeight*.5f, 1, 1, world.bob.angleBaby, false);
 
 		/*	float side = world.bob.velocity.x < 0 ? -1 : 1;
 			if (side < 0) { // the -1 is to render a bit higher than usual {
