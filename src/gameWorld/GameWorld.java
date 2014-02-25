@@ -101,6 +101,7 @@ public class GameWorld {
 	
 	Box2DDebugRenderer debugRenderer;
 	Body circleBody;
+	
 
 
 	public GameWorld(WorldListener listener, SensorFusionListener sensor) {

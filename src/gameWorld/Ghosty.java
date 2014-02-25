@@ -2,12 +2,12 @@ package gameWorld;
 
 import java.util.ArrayList;
 
-import android.util.Log;
-
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.Timer.Task;
 import com.komodo.mygdxgame.SensorFusionListener;
 
 
@@ -30,8 +30,11 @@ public class Ghosty extends DynamicGameObject {
 	float dirX;
 	float dirY;
 	protected Rectangle bounds;
-	ArrayList<Vector2> array;
 	Vector2 directionVector;
+	boolean first;
+	float angleBaby;
+	
+	Vector2 position2;
 
 	private Pool<Rectangle> rectPool = new Pool<Rectangle>() {
 		@Override
@@ -49,16 +52,16 @@ public class Ghosty extends DynamicGameObject {
 		dirY = y;
 		// width is 1/32f * texture.width
 		bounds = new Rectangle(position.x, position.y, GHOST_WIDTH, GHOST_HEIGHT);
-		array = new ArrayList<Vector2>();
-		array.add(new Vector2(x, y));
-		array.add(new Vector2(x, y));
+		position2 = new Vector2(x,y);	
+		
 		directionVector = new Vector2();
 		
+		
 		// move all this directionvector stuff somewhere else.. coalesce it.
+		angleBaby = sensor.getAzimuth();
 		double deg = Math.toRadians(sensor.getAzimuth());
 		directionVector.x = (float) ((-Math.sin(deg)) * 1);
 		directionVector.y = (float) ((Math.cos(deg)) * 1);
-		
 		
 	}
 	
@@ -72,32 +75,18 @@ public class Ghosty extends DynamicGameObject {
 	}
 
 	public void update (float deltaTime) {
-		//velocity.add(World.gravity.x * deltaTime, World.gravity.y * deltaTime);
-		//position.add(velocity.x * deltaTime, velocity.y * deltaTime);
-		
-		// Maybe just set velocities to the math.cos() etc... and that way deltaTime is taken care of.
-	//	Timer t = new timer();
-		
 		velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
 		velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
-	//	if (Math.abs(velocity.x) < 1) {
-	//		velocity.x = 0;
-			//currentState = State.IDLE;
-	//	}
+
 		
+		float lerp = 0.08f;
+		position2.x += (position.x - position2.x) * lerp;
+		position2.y += (position.y - position2.y) * lerp;
 		
+		angleBaby = LerpDegrees(angleBaby, sensor.getAzimuth(), .08f);
+
 		
-		
-		
-		
-		 Log.d("velocity2", Float.toString(velocity.x));
-		
-		
-		
-		
-		
-		
-/*
+		/*
 		if (velocity.y > 0 && state != GHOST_STATE_HIT) {
 			if (state != GHOST_STATE_JUMP) {
 				state = GHOST_STATE_JUMP;
@@ -117,6 +106,35 @@ public class Ghosty extends DynamicGameObject {
 
 		stateTime += deltaTime;
 	}
+	public static float LerpDegrees(float start, float end, float amount)
+    {
+        float difference = Math.abs(end - start);
+        if (difference > 180)
+        {
+            // We need to add on to one of the values.
+            if (end > start)
+            {
+                // We'll add it on to start...
+                start += 360;
+            }
+            else
+            {
+                // Add it on to end.
+                end += 360;
+            }
+        }
+
+        // Interpolate it.
+        float value = (start + ((end - start) * amount));
+
+        // Wrap it..
+        float rangeZero = 360;
+
+        if (value >= 0 && value <= 360)
+            return value;
+
+        return (value % rangeZero);
+    }
 
 	public void hitSquirrel () {
 		velocity.set(0, 0);
