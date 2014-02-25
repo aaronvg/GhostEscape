@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="91" height="91" tilewidth="70" tileheight="70">
+ <tileset firstgid="1" name="tiles_spritesheet" tilewidth="70" tileheight="70" spacing="2" margin="1">
+  <image source="../../../../Downloads/platformerGraphicsDeluxe_Updated/Tiles/tiles_spritesheet.png" width="914" height="936"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="91" height="91">
+  <data encoding="base64" compression="zlib">
+   eJzt19lpAzEUQFF/pyKX5DZSQAqYbpMPGwfxtFoj4ugceOBFGOYiNOPL5b18/sztPsd9OM+RDOfReh2t13nX1h8Tp/a7t0nzrq1HpdebXnP0/Vnz32m9jtbrjLRmzOi+blnTsnYnr3RsWbP7ufHbXzmvd6D1OlqvM6v19T5a573S+poZrWNntB7pvoP0mr+C71uavtp8B1HrtJHWc9RaR+17zhCtn2qt015fl7HeWsetc72j1rPukTuIrjvXu+V5YqT1bmq9o/3c01znp9aGrc21ziu1TaenddR199Ytes6QR+9cT53LRs7rR9PHe+pG74vR2U1Z7zPetbCGslmdta6rnRO9+568lme61t6UtezrqL093a/3vC4NZSPPe1qP6f3P6L44Tut1ZrWmjdZrpT2jz7Q+z5G8PnILmUpnAAAAAAAAAAAAAAAAAAAAAOj3DTDL22k=
+  </data>
+ </layer>
+ <layer name="Tile Layer 2" width="91" height="91">
+  <data encoding="base64" compression="zlib">
+   eJzt1rEJwCAUBFDnyB5C2uy/VLCzSSPJifE9sBEUOQ78pQCwk+thvw7eN3oO3nZ265j8lr/rs+Y7rceyzpF1jqxzZJ1jDsnR6xxZZ5j5smSd42/M0WsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVnQD6nEJtg==
+  </data>
+ </layer>
+</map>
