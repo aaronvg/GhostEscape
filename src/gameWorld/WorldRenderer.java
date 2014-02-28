@@ -18,21 +18,13 @@ package gameWorld;
 
 import android.util.Log;
 import box2DLights.PointLight;
-import box2DLights.PositionalLight;
 import box2DLights.RayHandler;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL10;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
-import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -62,13 +54,11 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.Shape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.komodo.mygdxgame.Assets;
 
 public class WorldRenderer {
@@ -88,6 +78,7 @@ public class WorldRenderer {
 
 	ShapeRenderer shapeRender;
 
+	float dampingCounter;
 	float followX;
 	float followY;
 	Vector2 lookAhead;
@@ -114,6 +105,7 @@ public class WorldRenderer {
 
 	private int lightSize = 64;
 	// private int lightSize = 160;
+	Vector2 velocity;
 
 	private float upScale = 1.5f; // for example; try lightSize=128,
 									// upScale=1.5f
@@ -168,8 +160,8 @@ public class WorldRenderer {
 		textureWidth = 1 / 48f * 64; // texture is 64 pixels big.
 		textureHeight = 1 / 48f * 64;
 		
-		
-		
+		dampingCounter = 0;
+		velocity = new Vector2();
 		
 		// Physics setup ---------------------------
 		// Creates Box2D world where we will put all our collision objects in.
@@ -315,17 +307,41 @@ public class WorldRenderer {
 		renderItems();
 		renderCastle();
 		batch.end();
-
+		
 		//Debug rendering
 		debugRender();
 		debugRenderer.render(world2, cam.combined);
 		
 		// light rendering
 		handler.updateAndRender();
-		
+		//circleBody.
 		// physics update
+		float ACCELERATION = 5;
+		float damping = .998f;
 		double deg = Math.toRadians(world.bob.sensor.getAzimuth());
-		circleBody.setLinearVelocity((float)(-Math.sin(deg)) * 7, (float)(Math.cos(deg)) * 7);
+		if(Gdx.input.isTouched()) {
+			dampingCounter += .06f;
+			if(dampingCounter > damping) {
+				dampingCounter = damping;
+			}
+			//dampingCounter = damping;
+			velocity.x = (float) ((-Math.sin(deg)) * 8 * dampingCounter);
+			velocity.y = (float) ((Math.cos(deg)) * 8 * dampingCounter);
+			circleBody.setLinearVelocity(velocity);
+			velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
+			velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
+		}
+		else {
+			velocity.x = (float) ((-Math.sin(deg)) * 8);
+			velocity.y = (float) ((Math.cos(deg)) * 8);
+			dampingCounter *= damping;
+			velocity.scl(dampingCounter);
+			Log.d("damping", "hi" + Float.toString(dampingCounter));
+			circleBody.setLinearVelocity(velocity);
+			velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
+			velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
+			
+		}
 		world2.step(1 / 60f, 6, 2);
 
 	}

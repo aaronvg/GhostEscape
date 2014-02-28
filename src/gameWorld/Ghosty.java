@@ -2,6 +2,7 @@ package gameWorld;
 
 import java.util.ArrayList;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -33,7 +34,7 @@ public class Ghosty extends DynamicGameObject {
 	Vector2 directionVector;
 	boolean first;
 	float angleBaby;
-	
+	float dampingCounter;
 	Vector2 position2;
 
 	private Pool<Rectangle> rectPool = new Pool<Rectangle>() {
@@ -57,6 +58,10 @@ public class Ghosty extends DynamicGameObject {
 		directionVector = new Vector2();
 		
 		
+		dampingCounter = 0;
+		//Box2dstuff
+		
+		
 		// move all this directionvector stuff somewhere else.. coalesce it.
 		angleBaby = sensor.getAzimuth();
 		double deg = Math.toRadians(sensor.getAzimuth());
@@ -75,16 +80,41 @@ public class Ghosty extends DynamicGameObject {
 	}
 
 	public void update (float deltaTime) {
-		velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
-		velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
-
-		
+		clampVelocity();
 		float lerp = 0.08f;
 		position2.x += (position.x - position2.x) * lerp;
 		position2.y += (position.y - position2.y) * lerp;
 		
 		angleBaby = LerpDegrees(angleBaby, sensor.getAzimuth(), .08f);
 
+		
+		
+		//------------------------box2dstuff
+	/*	float ACCELERATION = 12;
+		float damping = .998f;
+		double deg = Math.toRadians(sensor.getAzimuth());
+		if(Gdx.input.isTouched()) {
+			dampingCounter = damping;
+			velocity.x += (float) ((-Math.sin(deg)) * 1);
+			velocity.y += (float) ((Math.cos(deg)) * 1);
+			circleBody.setLinearVelocity(velocity);
+			
+			velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
+			velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
+		}
+		else {
+			velocity.x += (float) ((-Math.sin(deg)) * 1);
+			velocity.y += (float) ((Math.cos(deg)) * 1);
+			velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
+			velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
+			dampingCounter *= damping;
+			velocity.scl(dampingCounter);
+			circleBody.setLinearVelocity(velocity);
+		}
+		
+		
+		*/
+		
 		
 		/*
 		if (velocity.y > 0 && state != GHOST_STATE_HIT) {

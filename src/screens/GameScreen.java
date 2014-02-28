@@ -133,18 +133,24 @@ public class GameScreen implements Screen {
 		ApplicationType appType = Gdx.app.getType();
 		
 		// should work also with Gdx.input.isPeripheralAvailable(Peripheral.Accelerometer)
-		if (appType == ApplicationType.Android || appType == ApplicationType.iOS) {
+		/*if (appType == ApplicationType.Android || appType == ApplicationType.iOS) {
 			world.update(deltaTime, Gdx.input.getAccelerometerX());
 		} else {
 			float accel = 0;
 			if (Gdx.input.isKeyPressed(Keys.DPAD_LEFT)) accel = 5f;
 			if (Gdx.input.isKeyPressed(Keys.DPAD_RIGHT)) accel = -5f;
 			world.update(deltaTime, accel);
-		}
+		}*/
+		
+		world.update(deltaTime, 0);
 		if (world.score != lastScore) {
 			lastScore = world.score;
 			scoreString = "SCORE: " + lastScore;
 		}
+		
+		// This loop checks the state of the level. If we lose it displays the scores
+		// If the game reaches the "next level" state, we can set another screen from here, like a menu or high scores etc..
+		// We could also just start a new world and renderer for a next level.
 		if (world.state == GameWorld.WORLD_STATE_NEXT_LEVEL) {
 			state = GAME_LEVEL_END;
 		}
