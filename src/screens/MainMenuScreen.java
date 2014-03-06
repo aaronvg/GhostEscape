@@ -24,17 +24,20 @@ public class MainMenuScreen implements Screen {
 	Rectangle highscoresBounds;
 	Rectangle helpBounds;
 	Vector3 touchPoint;
+	
+	float width = 480;
+	float height = 320;
 
 	public MainMenuScreen (Game game) {
 		this.game = game;
-
-		guiCam = new OrthographicCamera(320, 480);
-		guiCam.position.set(320 / 2, 480 / 2, 0);
+	
+		guiCam = new OrthographicCamera(width, height);
+		guiCam.position.set(width / 2, height / 2, 0);
 		batcher = new SpriteBatch();
 		soundBounds = new Rectangle(0, 0, 64, 64);
-		playBounds = new Rectangle(160 - 150, 200 + 18, 300, 36);
-		highscoresBounds = new Rectangle(160 - 150, 200 - 18, 300, 36);
-		helpBounds = new Rectangle(160 - 150, 200 - 18 - 36, 300, 36);
+		playBounds = new Rectangle(10 + 50, 200 + 18, 300, 36);
+		highscoresBounds = new Rectangle(10 + 50, 200 - 18, 300, 36);
+		helpBounds = new Rectangle(10 + 50, 200 - 18 - 36, 300, 36);
 		touchPoint = new Vector3();
 	}
 
@@ -79,23 +82,23 @@ public class MainMenuScreen implements Screen {
 
 		batcher.disableBlending();
 		batcher.begin();
-		batcher.draw(Assets.backgroundRegion, 0, 0, 320, 480);
+		batcher.draw(Assets.backgroundRegion, 0, 0, width, height);
 		batcher.end();
 
 		batcher.enableBlending();
 		batcher.begin();
 		batcher.draw(Assets.logo, 160 - 274 / 2, 480 - 10 - 142, 274, 142);
-		batcher.draw(Assets.mainMenu, 10, 200 - 110 / 2, 300, 110);
+		batcher.draw(Assets.mainMenu, 10 + 50, 200 - 110 / 2, 300, 110);
 		batcher.draw(Settings.soundEnabled ? Assets.soundOn : Assets.soundOff, 0, 0, 64, 64);
 		batcher.end();
 
 		if (TimeUtils.nanoTime() - last > 2000000000) {
-			Gdx.app.log("SuperJumper",
+		/*	Gdx.app.log("SuperJumper",
 				"version: " + Gdx.app.getVersion() + ", memory: " + Gdx.app.getJavaHeap() + ", " + Gdx.app.getNativeHeap()
 					+ ", native orientation:" + Gdx.input.getNativeOrientation() + ", orientation: " + Gdx.input.getRotation()
 					+ ", accel: " + (int)Gdx.input.getAccelerometerX() + ", " + (int)Gdx.input.getAccelerometerY() + ", "
 					+ (int)Gdx.input.getAccelerometerZ() + ", apr: " + (int)Gdx.input.getAzimuth() + ", " + (int)Gdx.input.getPitch()
-					+ ", " + (int)Gdx.input.getRoll());
+					+ ", " + (int)Gdx.input.getRoll());*/
 			last = TimeUtils.nanoTime();
 		}
 	}

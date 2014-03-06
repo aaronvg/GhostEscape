@@ -16,6 +16,7 @@
 
 package gameWorld;
 
+import screens.GameScreen;
 import android.util.Log;
 import box2DLights.PointLight;
 import box2DLights.RayHandler;
@@ -63,10 +64,7 @@ import com.komodo.mygdxgame.Assets;
 
 public class WorldRenderer {
 
-	
 	private BitmapFont bitmapFont;
-
-
 
 	static final float FRUSTUM_WIDTH = 17;
 	static final float FRUSTUM_HEIGHT = 10;
@@ -92,9 +90,7 @@ public class WorldRenderer {
 	private float textureHeight;
 
 	Box2DDebugRenderer debugRenderer;
-	Body circleBody;
-	World world2;
-
+	// TODO attach light as a component of an object.
 	RayHandler handler;
 	RayHandler handler2;
 	public TiledMap map; // this is what the worldRenderer uses.
@@ -124,20 +120,24 @@ public class WorldRenderer {
 
 	ShaderProgram shadowMapShader, shadowRenderShader;
 
-
 	boolean additive = true;
 	boolean softShadows = true;
-	
-	
-	 public final static short FILTER_CATEGORY_SCENERY  = 0x0001;
-	  public final static short FILTER_CATEGORY_LIGHT    = 0x0002; //LIGHT PASS THROUGH
-	  public static final short FILTER_CATEGORY_DONT_ABSORB_LIGHT   = 0x0004;
-	  public static final short FILTER_CATEGORY_LIGHT_PASS = 0x0008;
-	  public final static short FILTER_MASK_SCENERY      = -1;
-	  public final static short FILTER_MASK_DONT_ABSORB_LIGHT = FILTER_CATEGORY_SCENERY | FILTER_CATEGORY_LIGHT;
-	  public final static short FILTER_MASK_ABSORB_LIGHT      = FILTER_CATEGORY_SCENERY;
+
+	// allconstant = world doesnt react to rotations. ghost just follows finger.
+	GameScreen.rotationMode rotation;
+
+	public final static short FILTER_CATEGORY_SCENERY = 0x0001;
+	public final static short FILTER_CATEGORY_LIGHT = 0x0002; // LIGHT PASS
+																// THROUGH
+	public static final short FILTER_CATEGORY_DONT_ABSORB_LIGHT = 0x0004;
+	public static final short FILTER_CATEGORY_LIGHT_PASS = 0x0008;
+	public final static short FILTER_MASK_SCENERY = -1;
+	public final static short FILTER_MASK_DONT_ABSORB_LIGHT = FILTER_CATEGORY_SCENERY
+			| FILTER_CATEGORY_LIGHT;
+	public final static short FILTER_MASK_ABSORB_LIGHT = FILTER_CATEGORY_SCENERY;
 
 	public WorldRenderer(SpriteBatch batch, GameWorld world) {
+		this.rotation = GameScreen.rotation;
 		this.world = world;
 		this.cam = new OrthographicCamera(FRUSTUM_WIDTH, FRUSTUM_HEIGHT);
 		this.cam.position.set(FRUSTUM_WIDTH / 2, FRUSTUM_HEIGHT / 2, 0);
@@ -159,71 +159,32 @@ public class WorldRenderer {
 		originY = 1 / 48f * ghostTexture.getHeight() / 2f;
 		textureWidth = 1 / 48f * 64; // texture is 64 pixels big.
 		textureHeight = 1 / 48f * 64;
-		
+
 		dampingCounter = 0;
 		velocity = new Vector2();
-		
-		// Physics setup ---------------------------
-		// Creates Box2D world where we will put all our collision objects in.
-		//world2 = new World(new Vector2(0, -9.8f), false);
-		world2 = new World(new Vector2(0, 0), false);
-		
-		// Create definition of a collision body (a square)
-		BodyDef circleDef = new BodyDef();
-		circleDef.type = BodyType.DynamicBody;
-		circleDef.position.set(10.5f, 84.5f);
-		
 
-		// Create shape for that definition
-		circleBody = world2.createBody(circleDef);
-		CircleShape circleShape = new CircleShape();
-		circleShape.setRadius(.55f);
-		circleBody.setFixedRotation(true);
-
-		// Unite them in one fixture object.
-		FixtureDef circleFixture = new FixtureDef();
-		circleFixture.shape = circleShape;
-		circleFixture.density = .4f;
-		circleFixture.friction = .2f;
-		circleFixture.restitution = .6f;
-		
-		circleBody.createFixture(circleFixture);
-		
-		// Load more collision objects from the tiled map into our box2D simulation/world.
-		map = new TmxMapLoader().load("data/level.tmx");
-		mapBuilder = new MapBodyBuilder();
-		mapBuilder.buildShapes(map, 70f, world2);
-				
-
-		
 		// Light setup ---------------------------
 		RayHandler.useDiffuseLight(true);
-		handler = new RayHandler(world2);
+		handler = new RayHandler(world.world2);
 		handler.setAmbientLight(.1f, .1f, .1f, 1f);
-		//handler.setAmbientLight(.06f, .06f, .06f, .05f);
+		// handler.setAmbientLight(.06f, .06f, .06f, .05f);
 		handler.setShadows(true);
 		handler.setCulling(true);
-		//handler.setBlur(true);
-		
-		
+		// handler.setBlur(true);
+
 		// Renders shadows
-		pointLight = new PointLight(handler, 250, new Color(1, 1, .8f, .6f),
+		pointLight = new PointLight(handler, 290, new Color(1, 1, .8f, .6f),
 				15, 10, 110);
-	    pointLight.setSoft(true);
-	    pointLight.setSoftnessLenght(.3f);
-	    
-	    // lights up the tiles around the player (no shadows)
+		pointLight.setSoft(true);
+		pointLight.setSoftnessLenght(.3f);
+
+		// lights up the tiles around the player (no shadows)
 		pointLight2 = new PointLight(handler, 200, new Color(1, 1, .8f, .6f),
 				6, 10, 110);
 		pointLight2.setSoftnessLenght(1.5f);
 		pointLight2.setXray(true);
-		
-		
-		
-		
 
 		// for debugging---------
-		
 		// Box2D debug renderer. renders wireframes of the objects we create.
 		debugRenderer = new Box2DDebugRenderer();
 		bitmapFont = new BitmapFont();
@@ -234,42 +195,35 @@ public class WorldRenderer {
 		bitmapFont.setScale(1.0f / 48.0f);
 	}
 
-	
-
 	public void render() {
+		// Set lights
+		pointLight.setPosition(world.bob.position.x, world.bob.position.y);
+		pointLight2.setPosition(world.bob.position.x, world.bob.position.y);
+		handler.setCombinedMatrix(cam.combined, cam.position.x, cam.position.y,
+				cam.viewportWidth * cam.zoom, cam.viewportHeight * cam.zoom);
 
-		//pointLight.setPosition(world.bob.position.x, world.bob.position.y);
-		//pointLight2.setPosition(world.bob.position.x, world.bob.position.y);
-		
-		pointLight.setPosition(circleBody.getPosition().x, circleBody.getPosition().y);
-		pointLight2.setPosition(circleBody.getPosition().x, circleBody.getPosition().y);
-
-		//handler.setCombinedMatrix(cam.combined);
-		handler.setCombinedMatrix(cam.combined,cam.position.x, cam.position.y, cam.viewportWidth * cam.zoom, cam.viewportHeight * cam.zoom);
-		
-		
-		
+		// Set camera
 		float lerp = 0.95f;
 		Vector3 position = cam.position;
 		world.bob.directionVector.nor();
-		//position.x += (world.bob.position.x + world.bob.directionVector.x * 1.8 - position.x) * lerp;
-		//position.y += (world.bob.position.y + world.bob.directionVector.y * 1.8 - position.y) * lerp;
-		
-		position.x += (circleBody.getPosition().x + world.bob.directionVector.x * 1.8 - position.x) * lerp;
-		position.y += (circleBody.getPosition().y + world.bob.directionVector.y * 1.8 - position.y) * lerp;
-		
-		//cam.position.x = world.bob.position.x;
-		//cam.position.y = world.bob.position.y;
+		position.x += (world.bob.position.x + world.bob.directionVector.x * 1.8 - position.x)
+				* lerp;
+		position.y += (world.bob.position.y + world.bob.directionVector.y * 1.8 - position.y)
+				* lerp;
+
+		// cam.position.x = world.bob.position.x;
+		// cam.position.y = world.bob.position.y;
 		float camAngle = -getCameraCurrentXYAngle(cam); // + 180;
-		// cam.rotate((camAngle - world.sensor.getAzimuth() + 180)); // switch
+		if (rotation == GameScreen.rotationMode.WORLD) {
+			cam.rotate((camAngle + world.sensor.getAzimuth() + 90)); // switch
+		}
 		// angle to positive for reverse spin.
 		cam.update();
-		
+
 		renderBackground();
 		renderObjects();
 
 	}
-
 
 	public float getCameraCurrentXYAngle(OrthographicCamera cam) {
 		return (float) Math.atan2(cam.up.x, cam.up.y)
@@ -277,29 +231,22 @@ public class WorldRenderer {
 	}
 
 	public void renderBackground() {
-		// batch.disableBlending();
-		// batch.begin();
-
-		// batch.draw(Assets.backgroundRegion, cam.position.x - FRUSTUM_WIDTH /
-		// 2, cam.position.y - FRUSTUM_HEIGHT / 2, FRUSTUM_WIDTH,
-		// FRUSTUM_HEIGHT);
-		// batch.end();
 	}
 
 	public void renderObjects() {
-		
+
 		// Draw all tiles now and black background
 		shapeRender.begin(ShapeType.Filled);
 		shapeRender.setColor(new Color(.1f, .1f, .1f, 1f));
-		shapeRender.rect(cam.position.x - 200, cam.position.y - 200, 2580, 1680);
+		shapeRender
+				.rect(cam.position.x - 200, cam.position.y - 200, 2580, 1680);
 		shapeRender.end();
 		batch = (SpriteBatch) renderer.getSpriteBatch();
 		renderer.setView(cam.combined, cam.position.x - 20,
 				cam.position.y - 20, cam.viewportWidth + 40,
 				cam.viewportWidth + 40);
 		renderer.render();
-		
-		
+
 		// render game objects
 		batch.begin();
 		renderBob();
@@ -307,45 +254,20 @@ public class WorldRenderer {
 		renderItems();
 		renderCastle();
 		batch.end();
-		
-		//Debug rendering
+
+		// Debug rendering
+		// draw fonts
 		debugRender();
-		debugRenderer.render(world2, cam.combined);
-		
+		// draw box2d world.
+		debugRenderer.render(world.world2, cam.combined);
+
 		// light rendering
 		handler.updateAndRender();
-		//circleBody.
-		// physics update
-		float ACCELERATION = 5;
-		float damping = .998f;
-		double deg = Math.toRadians(world.bob.sensor.getAzimuth());
-		if(Gdx.input.isTouched()) {
-			dampingCounter += .06f;
-			if(dampingCounter > damping) {
-				dampingCounter = damping;
-			}
-			//dampingCounter = damping;
-			velocity.x = (float) ((-Math.sin(deg)) * 8 * dampingCounter);
-			velocity.y = (float) ((Math.cos(deg)) * 8 * dampingCounter);
-			circleBody.setLinearVelocity(velocity);
-			velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
-			velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
-		}
-		else {
-			velocity.x = (float) ((-Math.sin(deg)) * 8);
-			velocity.y = (float) ((Math.cos(deg)) * 8);
-			dampingCounter *= damping;
-			velocity.scl(dampingCounter);
-			Log.d("damping", "hi" + Float.toString(dampingCounter));
-			circleBody.setLinearVelocity(velocity);
-			velocity.x = MathUtils.clamp(velocity.x, -ACCELERATION, ACCELERATION);
-			velocity.y = MathUtils.clamp(velocity.y, -ACCELERATION, ACCELERATION);
-			
-		}
-		world2.step(1 / 60f, 6, 2);
+
+		// world2.step(1 / 60f, 6, 2);
 
 	}
-	
+
 	public void debugRender() {
 		batch.begin();
 		float x = cam.position.x;
@@ -364,7 +286,8 @@ public class WorldRenderer {
 		x += bitmapFont.draw(batch, " space=light flicker (" +lightOscillate+ ")", x, cam.position.y-bitmapFont.getLineHeight()).width;
 		x = cam.position.x;
 		bitmapFont.setColor(Color.WHITE);*/
-		x += bitmapFont.draw(batch, Gdx.graphics.getFramesPerSecond() + " fps", x, cam.position.y-bitmapFont.getLineHeight()*2.0f).width;
+		x += bitmapFont.draw(batch, Gdx.graphics.getFramesPerSecond() + " fps",
+				x, cam.position.y - bitmapFont.getLineHeight() * 2.0f).width;
 		batch.end();
 	}
 
@@ -382,19 +305,31 @@ public class WorldRenderer {
 			keyFrame = Assets.bobHit;
 		}
 
-		batch.draw(ghostRegion, circleBody.getPosition().x - .7f,
-							circleBody.getPosition().y - .64f, originX, originY, textureWidth,
-							textureHeight, 1, 1, world.sensor.getAzimuth(), false);
-		
-		
-		
-	//	batch.draw(ghostRegion, world.bob.position.x - .2f,
-	//			world.bob.position.y - .2f, originX, originY, textureWidth,
-	//			textureHeight, 1, 1, world.sensor.getAzimuth(), false);
-		
-	//	batch.draw(ghostRegion, world.bob.position2.x - .2f,
-	//			world.bob.position2.y - .4f, originX, originY, textureWidth * .5f,
-	//			textureHeight*.5f, 1, 1, world.bob.angleBaby, false);
+		if (rotation == GameScreen.rotationMode.PLAYER) {
+			batch.draw(ghostRegion, world.bob.position.x - .7f,
+					world.bob.position.y - .64f, originX, originY,
+					textureWidth, textureHeight, 1, 1,
+					world.sensor.getAzimuth(), false);
+			batch.draw(ghostRegion, world.bob.position2.x - .2f,
+					world.bob.position2.y - .84f, originX, originY,
+					textureWidth * .5f, textureHeight * .5f, 1, 1,
+					world.bob.angleBaby, false);
+
+		} else if (rotation == GameScreen.rotationMode.WORLD) {
+			batch.draw(ghostRegion, world.bob.position.x - .7f,
+					world.bob.position.y - .64f, originX, originY,
+					textureWidth, textureHeight, 1, 1,
+					-world.sensor.getAzimuth() + 180, false);
+			
+			batch.draw(ghostRegion, world.bob.position2.x - .2f,
+					world.bob.position2.y - 1.5f, originX, originY,
+					textureWidth * .5f, textureHeight * .5f, 1, 1,
+					-world.bob.angleBaby + 180, false);
+		}
+
+		// batch.draw(ghostRegion, world.bob.position.x - .2f,
+		// world.bob.position.y - .2f, originX, originY, textureWidth,
+		// textureHeight, 1, 1, world.sensor.getAzimuth(), false);
 
 		/*	float side = world.bob.velocity.x < 0 ? -1 : 1;
 			if (side < 0) { // the -1 is to render a bit higher than usual {
@@ -457,7 +392,6 @@ public class WorldRenderer {
 		// }
 	}
 
-
 	private void renderCastle() {
 		// Castle castle = world.castle;
 		// batch.draw(Assets.castle, castle.position.x - 1, castle.position.y -
@@ -501,7 +435,7 @@ public class WorldRenderer {
 				// groundBodyDef.position.set(5,84);
 
 				bd.type = BodyType.KinematicBody;
-				//bd.type = BodyType.DynamicBody;
+				// bd.type = BodyType.DynamicBody;
 				Body body = world.createBody(bd);
 				body.createFixture(shape, 1);
 

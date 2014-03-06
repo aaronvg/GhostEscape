@@ -112,7 +112,8 @@ public class SensorFusionListener implements SensorEventListener {
     private Handler handler;
 
     private boolean oneSensor;
-    
+    float valuesCopy[];
+    float values2[];
     public SensorFusionListener(Context contxt) {
         oneSensor = true;
         // Initialize to identity matrix
@@ -143,8 +144,8 @@ public class SensorFusionListener implements SensorEventListener {
         thePaint.setTextSize(50);
         start = System.currentTimeMillis();
         angle = 0;
-        
-        
+        valuesCopy = new float[3];
+        values2 = new float[3];
        // fuseTimer = new Timer();
         // instead of TIME_CONSTANT just re-orient every 100ms
         //fuseTimer.scheduleAtFixedRate(new calculateFusedOrientationTask(),
@@ -169,8 +170,11 @@ public class SensorFusionListener implements SensorEventListener {
         Log.d("sensor", "startfused");
         /** With one sensor **/
         if(oneSensor){
-            mSensorManager.registerListener(this, mRotationVectorSensor,
-            		SensorManager.SENSOR_DELAY_GAME);
+          //  mSensorManager.registerListener(this, mRotationVectorSensor,
+          //  		SensorManager.SENSOR_DELAY_GAME);
+        	 mSensorManager.registerListener(this, mRotationVectorSensor,
+        			 (int)(1.0F/60) * 1000 * 1000); //poll at 60hz
+        	
         }
         /** With many sensors **/
         else {
@@ -201,24 +205,21 @@ public class SensorFusionListener implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+    	
         // TODO Auto-generated method stub
         // Log.d("sensor", "changed");
         /** WITH ONE SENSOR **/
         if(oneSensor) {
             if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
             	// convert the rotation-vector to a 4x4 matrix.
+            	// System.arraycopy(event.values, 0, valuesCopy, 0, 3);
             	SensorManager.getRotationMatrixFromVector(mRotationMatrix,
             			event.values);
             	
             	// Saves the orientation values in the values array
             	SensorManager.getOrientation(mRotationMatrix, event.values);
-            	
-            	g_azimuth = (float) (event.values[0] * 180 / Math.PI);
-            	if (firstRunCalibration) {
-            		angleOffset = g_azimuth;
-            		firstRunCalibration = false;
-            	}
-            	g_azimuth += -angleOffset;
+            	System.arraycopy(event.values, 0, values2, 0, 1);
+            	//values2 = valuesCopy;
             }
         }
         /** With Sensor Fusion **/
@@ -246,8 +247,16 @@ public class SensorFusionListener implements SensorEventListener {
 
     public final float getAzimuth() {
         /** With one sensor **/
-        if(oneSensor)
-          return g_azimuth -90; // the -90 dictates the direction we start in.
+        if(oneSensor) {
+         // return g_azimuth -90; // the -90 dictates the direction we start in.
+        	g_azimuth = (float) (values2[0] * 180 / Math.PI);
+        	if (firstRunCalibration) {
+        		angleOffset = g_azimuth;
+        		firstRunCalibration = false;
+        	}
+        	g_azimuth += -angleOffset;
+        	return g_azimuth - 90;
+        }
 
         /** With many **/
         else {
